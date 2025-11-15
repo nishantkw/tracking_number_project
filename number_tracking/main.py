@@ -1,47 +1,77 @@
+# main.py - Spyder Friendly Version
 import phonenumbers
 from phonenumbers import geocoder
-from key import keys
-
-
-
-
-number = input("Enter phone number with country code:")
-
-
-check_number = phonenumbers.parse(number)
-number_location = geocoder.description_for_number(check_number, "en")
-print(number, " : ", number_location)
-
-
-from phonenumbers import carrier
-service_provider = phonenumbers.parse(number)
-print("Service provider : ",carrier.name_for_number(service_provider, "en"))
-
-
 from opencage.geocoder import OpenCageGeocode
-geocoder = OpenCageGeocode(keys)
-query = str(number_location)
-results = geocoder.geocode(query)
 
-lat = results[0]['geometry']['lat']
-lng = results[0]['geometry']['lng']
-timezone = results[0]['annotations']['timezone']['name']
-currency_name = results[0]['annotations']['currency']['name']
-currency_symbol = results[0]['annotations']['currency']['symbol']
-flag = results[0]['annotations']['flag']
-print("Time-Zone : ",timezone)
-print("Currency : ",currency_name)
-print("Symbol : ",currency_symbol)
-print("latitude: ",lat)
-print("longitude: ",lng)
+# -------------------------
+# 1. API KEY
+# -------------------------
+API_KEY = "65dacbfb2a79441cb3c1f0ed94f19477"   # Your OpenCage API Key
+geo = OpenCageGeocode(API_KEY)
 
+# -------------------------
+# 2. Take Input
+# -------------------------
+phone_number = input("Enter phone number with country code (e.g., +918757896699): ").strip()
 
-import folium
-map_location = folium.Map(location = [lat,lng], zoom_start=8)
-folium.Marker([lat,lng], popup=number_location).add_to(map_location)
-map_location.save("mylocation.html")
+if not phone_number:
+    print("Error: No input received.")
+    exit()
 
-import webbrowser
-# here insert the relative path of your mylocation.html file 
-url = " realtive path " 
-webbrowser.open_new(url)
+# -------------------------
+# 3. Parse Phone Number
+# -------------------------
+try:
+    parsed_number = phonenumbers.parse(phone_number)
+    country_name = geocoder.description_for_number(parsed_number, "en")
+
+    if country_name:
+        print(f"\n📌 Phone number belongs to: {country_name}")
+    else:
+        print("Could not detect country from this number.")
+
+except Exception as e:
+    print(f"Error while parsing phone number: {e}")
+    exit()
+
+# -------------------------
+# 4. Get Country Coordinates
+# -------------------------
+try:
+    result = geo.geocode(country_name)
+
+    if result:
+        lat = result[0]["geometry"]["lat"]
+        lng = result[0]["geometry"]["lng"]
+        print(f"🌍 Approximate coordinates of {country_name}:")
+        print(f"   Latitude: {lat}")
+        print(f"   Longitude: {lng}")
+    else:
+        print("Could not find coordinates for this location.")
+
+except Exception as e:
+    print(f"Error fetching coordinates: {e}")
+    exit()
+
+# -------------------------
+# 5. Generate Map (HTML)
+# -------------------------
+try:
+    import folium
+    import webbrowser
+    import os
+
+    map_location = folium.Map(location=[lat, lng], zoom_start=5)
+    folium.Marker([lat, lng], popup=country_name).add_to(map_location)
+
+    html_file = "mylocation.html"
+    map_location.save(html_file)
+
+    print(f"\n📄 Map saved as: {html_file}")
+
+    # Auto-open map in browser
+    file_path = os.path.abspath(html_file)
+    webbrowser.open_new(f"file:///{file_path}")
+
+except Exception as e:
+    print(f"Error generating map: {e}")
