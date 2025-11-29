@@ -6,7 +6,7 @@ from opencage.geocoder import OpenCageGeocode
 # -------------------------
 # 1. API KEY
 # -------------------------
-API_KEY = "65dacbfb2a79441cb3c1f0ed94f19477"   # Your OpenCage API Key
+API_KEY =    # Your OpenCage API Key
 geo = OpenCageGeocode(API_KEY)
 
 # -------------------------
@@ -75,3 +75,4 @@ try:
 
 except Exception as e:
     print(f"Error generating map: {e}")
+
